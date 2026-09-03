@@ -6,7 +6,7 @@ title: "About Me"
 
 <!-- CHANGE THIS -->
 
-I’m a student in the MUSA program at Penn. My background is in urban planning and real estate development, and I’m interested in housing, economic development, and how data can help us better understand and build cities.
+I began my career working in my family’s construction business in Ethiopia and later worked across real estate investment, asset management, brokerage, and development in the U.S. I now lead HAQI Partners, where I work on research oriented housing and community development projects, and I’m interested in using spatial data and research to make better development and investment decisions.
 
 ## Skills
 
