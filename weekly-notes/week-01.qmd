@@ -35,7 +35,7 @@ sessionInfo()$R.version$version.string
 
 <!-- CHANGE THIS: 3-4 sentences -->
 
-What I want out of this course: What I want most from this course is to become comfortable enough with these tools that I can use them beyond the classroom, especially for real estate, housing, and urban research. I want to get to a point where working with data and building something from it feels natural rather than intimidating.
+What I want most from this course: To become comfortable enough with these tools that I can use them beyond the classroom, especially for real estate, housing, and urban research. I want to get to a point where working with data and building something from it feels natural rather than intimidating.
 
 
 One thing I'm nervous about: I'm still nervous about coding and keeping track of how all the different tools connect, especially Git, GitHub, RStudio, and Quarto. But getting everything running this week made the whole process feel a little less abstract.
