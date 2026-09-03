@@ -53,21 +53,21 @@
     "href": "weekly-notes/week-01.html#proving-r-works",
     "title": "Week 1: Getting Set Up",
     "section": "Proving R Works",
-    "text": "Proving R Works\nThe chunk below runs when this page renders. If you can see a result underneath it on your published site, R and Quarto are talking to each other correctly.\n\nsessionInfo()$R.version$version.string\n\n[1] \"R version 4.6.0 (2026-04-24)\""
+    "text": "Proving R Works\nThe chunk below runs when this page renders. If you can see a result underneath it on your published site, R and Quarto are talking to each other correctly.\n\nsessionInfo()$R.version$version.string\n\n[1] \"R version 4.6.1 (2026-06-24)\""
   },
   {
     "objectID": "weekly-notes/week-01.html#reflection",
     "href": "weekly-notes/week-01.html#reflection",
     "title": "Week 1: Getting Set Up",
     "section": "Reflection",
-    "text": "Reflection\n\nWhat I want out of this course:\nOne thing I’m nervous about:"
+    "text": "Reflection\n\nWhat I want most from this course: To become comfortable enough with these tools that I can use them beyond the classroom, especially for real estate, housing, and urban research. I want to get to a point where working with data and building something from it feels natural rather than intimidating.\nOne thing I’m nervous about: I’m still nervous about coding and keeping track of how all the different tools connect, especially Git, GitHub, RStudio, and Quarto. But getting everything running this week made the whole process feel a little less abstract."
   },
   {
     "objectID": "weekly-notes/week-01.html#questions-i-still-have",
     "href": "weekly-notes/week-01.html#questions-i-still-have",
     "title": "Week 1: Getting Set Up",
     "section": "Questions I Still Have",
-    "text": "Questions I Still Have"
+    "text": "Questions I Still Have\n\nHow do I get comfortable enough with this workflow that I’m thinking about the problem I’m trying to solve rather than constantly thinking about the tools?"
   },
   {
     "objectID": "about.html",
