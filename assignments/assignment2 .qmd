@@ -1,0 +1,167 @@
+---
+title: "Assignment 2: Who Do We Know the Least About?"
+subtitle: "Measuring uncertainty in American Community Survey data"
+author: "Thomas Hagos"
+date: today
+format:
+  html:
+    toc: true
+    code-fold: false
+execute:
+  warning: false
+  message: false
+---
+
+## Setup
+
+```{r}
+library(tidyverse)
+library(tidycensus)
+```
+---
+
+## The question
+
+Every number the American Community Survey publishes is an estimate drawn from a
+sample, not a count. That means every number comes with a margin of error — a
+statement about how wrong it might be.
+
+Most people ignore it. In this assignment, you won't.
+
+
+**In this analysis, I look at median household income across counties in New York, and
+ask which communities we measure most and least reliably.**
+
+---
+
+## Choosing what to measure
+
+
+```{r}
+my_state <- "NY"        # two-letter abbreviation, in quotes
+my_variable <- "B19013_001"     # the variable code, in quotes
+```
+
+## Pulling the data
+
+```{r}
+county_data <- get_acs(
+  geography = "county",
+  variables = my_variable,
+  state = my_state,
+  year = 2023,
+  survey = "acs5"
+)
+```
+
+Let's look at what came back.
+
+```{r}
+dim(county_data)
+head(county_data)
+```
+
+
+**[How many rows did you get? Does that match the number of counties in your state?]**
+I was able to find 62 rows and it matches to the number of counties in the state of New York. 
+
+---
+
+## How big is the margin of error?
+
+A margin of error of 3,000 means something very different for an estimate of 20,000
+than for an estimate of 200,000. To compare across places, we need it as a
+percentage.
+
+```{r}
+county_data <- county_data %>%
+  mutate(moe_pct = moe / estimate * 100)
+```
+
+Now sort to see which counties are measured least reliably.
+
+```{r}
+county_data %>%
+  arrange(desc(moe_pct)) %>%
+  select(NAME, estimate, moe, moe_pct) %>%
+  head(10)
+```
+
+
+**[Which county has the largest margin of error relative to its estimate? How large
+is it?]**
+Hamilton County has the largest margin of error relative to its estimate and its 10.925308.
+---
+
+## Sorting counties into reliability categories
+
+```{r}
+county_data <- county_data %>%
+  mutate(reliability = case_when(
+    moe_pct < 5  ~ "High confidence",
+    moe_pct < 10 ~ "Moderate",
+    TRUE         ~ "Low confidence"
+  ))
+
+count(county_data, reliability)
+```
+
+
+
+**[How many counties fall into each category?]**
+There are 53 counties counties in high confidence, 1 county in low confidence and 8 counties in moderate.
+---
+
+## Is the margin of error bigger in small places?
+
+To answer this we need population and our variable side by side, in the same row.
+That means a **wide** pull.
+
+```{r}
+county_wide <- get_acs(
+  geography = "county",
+  variables = c(myvar = my_variable,
+                pop   = "B01003_001"),
+  state = my_state,
+  year = 2023,
+  survey = "acs5",
+  output = "wide"
+)
+
+head(county_wide)
+```
+
+
+```{r}
+county_wide <- county_wide %>%
+  mutate(moe_pct = myvarM / myvarE * 100) %>%
+  mutate(reliability = case_when(
+    moe_pct < 5  ~ "High confidence",
+    moe_pct < 15 ~ "Moderate",
+    TRUE         ~ "Low confidence"
+  ))
+```
+
+Now compare the average population of counties in each reliability category.
+
+```{r}
+county_wide %>%
+  group_by(reliability) %>%
+  summarize(
+    n_counties = n(),
+    avg_population = mean(popE)
+  )
+```
+
+
+**[What is the average population of high-confidence counties versus low-confidence
+counties? Is there a pattern?]**
+The average population for for high-confidence counties is 369307.62 versus the moderate which is 33223.89. Yes, there is pattern - counties with larger population have high confidence while counties with lower population have low-confidence.
+---
+
+**[Your 200–250 word reflection goes here.]**
+We know the least about Hamilton County, Schuyler County and Yates County out of the 62 counties in the state of New York. And this is due to due to their smaller population number. Things could go wrong in many subsidy allocation when building public infrastructure such as road, electricity and housing. And that could affect how people live, play and work and most of all; their access to opportunities could be dramatically limited.
+---
+
+
+---
