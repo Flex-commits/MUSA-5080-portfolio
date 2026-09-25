@@ -1,0 +1,379 @@
+---
+title: "Verify the Claim: Poverty Change in Philadelphia"
+subtitle: "Testing 2010 and 2017 ACS estimates for census tracts"
+author: "Thomas Hagos"
+date: today
+format:
+  html:
+    toc: true
+    code-fold: true
+    code-summary: "Show code"
+    embed-resources: true
+execute:
+  warning: false
+  message: false
+--- 
+## The claim and the data
+
+Alfred Lubrano’s [2018 WHYY article](https://whyy.org/articles/new-census-figures-on-philly-neighborhoods-show-inequality-high-numbers-of-whites-living-in-poverty/) reports that Eastwick’s poverty rate rose from 12% to 26% and Holmesburg’s from 2% to 19%. I wanted to see how much of the reported change is clear once I account for uncertainty in the ACS estimates.
+
+I use Philadelphia census tracts from the 2006–2010 and 2013–2017 ACS five-year surveys. These periods do not overlap. I calculate poverty rates using `B17001_002` (people below poverty) divided by `B17001_001` (people whose poverty status was determined). The article does not list the tracts used for each neighborhood, so I test tract-level changes rather than reproduce its neighborhood figures.
+
+```{r}
+#| include: false
+library(tidycensus)
+library(tidyverse)
+library(gt)
+```
+
+
+```{r}
+phillypoverty_2010 <- get_acs(
+  geography = "tract",
+  state = "PA",
+  county= "Philadelphia",
+  year = 2010,
+variables = c(
+    total_pop=
+      "B17001_001",
+    poverty_pop =
+      "B17001_002"
+  ),survey = "acs5"
+  )
+```
+```{r}
+phillypoverty_2017 <- get_acs(
+  geography = "tract",
+  state = "PA",
+  county= "Philadelphia",
+  year = 2017,
+variables = c(
+    total_pop=
+      "B17001_001",
+    poverty_pop =
+      "B17001_002"
+  ),survey = "acs5"
+  )
+```
+```{r}
+#| output: false
+names(phillypoverty_2010)
+head(phillypoverty_2010)
+
+poverty_2010_wide <- phillypoverty_2010 |>
+  tidyr::pivot_wider(
+    names_from = variable,
+    values_from = c(estimate, moe)
+  )
+
+head(poverty_2010_wide)
+```
+```{r}
+#| output: false
+poverty_2010_wide <- phillypoverty_2010 |>
+  pivot_wider(
+    names_from = variable,
+    values_from = c(estimate, moe)
+  )
+
+poverty_2017_wide <- phillypoverty_2017 |>
+  pivot_wider(
+    names_from = variable,
+    values_from = c(estimate, moe)
+  )
+
+names(poverty_2010_wide)
+nrow(poverty_2010_wide)
+nrow(poverty_2017_wide)
+```
+```{r}
+#| output: false
+poverty_2010_wide |>
+  summarise(
+    tracts = n(),
+    zero_denominator = sum(estimate_total_pop == 0, na.rm = TRUE),
+    missing_denominator = sum(is.na(estimate_total_pop))
+  )
+
+poverty_2017_wide |>
+  summarise(
+    tracts = n(),
+    zero_denominator = sum(estimate_total_pop == 0, na.rm = TRUE),
+    missing_denominator = sum(is.na(estimate_total_pop))
+  )
+```
+```{r}
+#| output: false
+poverty_2010_rates <- poverty_2010_wide |>
+  mutate(
+    poverty_rate = if_else(
+      estimate_total_pop > 0,
+      estimate_poverty_pop / estimate_total_pop,
+      NA_real_
+    ),
+    poverty_rate_moe = if_else(
+      estimate_total_pop > 0,
+      moe_prop(
+        estimate_poverty_pop,
+        estimate_total_pop,
+        moe_poverty_pop,
+        moe_total_pop
+      ),
+      NA_real_
+    )
+  )
+
+poverty_2010_rates |>
+  select(GEOID, poverty_rate, poverty_rate_moe) |>
+  head()
+```
+```{r}
+#| output: false
+poverty_2017_rates <- poverty_2017_wide |>
+  mutate(
+    poverty_rate = if_else(
+      estimate_total_pop > 0,
+      estimate_poverty_pop / estimate_total_pop,
+      NA_real_
+    ),
+    poverty_rate_moe = if_else(
+      estimate_total_pop > 0,
+      moe_prop(
+        estimate_poverty_pop,
+        estimate_total_pop,
+        moe_poverty_pop,
+        moe_total_pop
+      ),
+      NA_real_
+    )
+  )
+
+poverty_2017_rates |>
+  select(GEOID, poverty_rate, poverty_rate_moe) |>
+  head()
+```
+```{r}
+#| output: false
+poverty_2010_rates <- poverty_2010_rates |>
+  mutate(
+    cv = (poverty_rate_moe / 1.645) / poverty_rate,
+    reliability = case_when(
+      is.na(cv) | !is.finite(cv) ~ "Undefined",
+      cv < 0.12 ~ "Reliable",
+      cv <= 0.40 ~ "Somewhat reliable",
+      TRUE ~ "Unreliable"
+    )
+  )
+
+poverty_2017_rates <- poverty_2017_rates |>
+  mutate(
+    cv = (poverty_rate_moe / 1.645) / poverty_rate,
+    reliability = case_when(
+      is.na(cv) | !is.finite(cv) ~ "Undefined",
+      cv < 0.12 ~ "Reliable",
+      cv <= 0.40 ~ "Somewhat reliable",
+      TRUE ~ "Unreliable"
+    )
+  )
+
+count(poverty_2010_rates, reliability)
+count(poverty_2017_rates, reliability)
+```
+```{r}
+#| output: false
+poverty_2017_rates |>
+  filter(reliability == "Undefined") |>
+  select(
+    GEOID, NAME,
+    estimate_total_pop, estimate_poverty_pop,
+    poverty_rate, poverty_rate_moe, cv
+  )
+```
+```{r}
+#| output: false
+poverty_2010_rates |>
+  filter(reliability == "Undefined") |>
+  select(
+    GEOID, NAME,
+    estimate_total_pop, estimate_poverty_pop,
+    poverty_rate, poverty_rate_moe, cv
+  )
+```
+```{r}
+#| output: false
+tract_pairs <- poverty_2010_rates |>
+  select(
+    GEOID,
+    rate_2010 = poverty_rate,
+    moe_2010 = poverty_rate_moe
+  ) |>
+  inner_join(
+    poverty_2017_rates |>
+      select(
+        GEOID,
+        rate_2017 = poverty_rate,
+        moe_2017 = poverty_rate_moe
+      ),
+    by = "GEOID"
+  )
+
+tract_pairs |>
+  summarise(
+    matched = n(),
+    usable = sum(
+      !is.na(rate_2010) & !is.na(moe_2010) &
+      !is.na(rate_2017) & !is.na(moe_2017)
+    )
+  )
+```
+```{r}
+#| output: false
+tract_change <- tract_pairs |>
+  filter(
+    !is.na(rate_2010), !is.na(moe_2010),
+    !is.na(rate_2017), !is.na(moe_2017)
+  ) |>
+  mutate(
+    change_pp = 100 * (rate_2017 - rate_2010),
+    change_moe_pp = 100 * sqrt(moe_2010^2 + moe_2017^2),
+    detectable = abs(change_pp) > change_moe_pp
+  )
+
+tract_change |>
+  summarise(
+    tested = n(),
+    detectable_increase = sum(detectable & change_pp > 0),
+    detectable_decrease = sum(detectable & change_pp < 0),
+    not_detectable = sum(!detectable)
+  )
+```
+```{r}
+
+#| fig-cap: "Largest estimated tract poverty-rate changes with 90% margins of error. Source: ACS 2006–2010 and 2013–2017 five-year estimates, table B17001."
+
+tract_change |>
+  slice_max(order_by = abs(change_pp), n = 20, with_ties = FALSE) |>
+  mutate(GEOID = reorder(GEOID, change_pp)) |>
+  ggplot(aes(y = GEOID)) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "gray40") +
+  geom_segment(
+    aes(
+      x = change_pp - change_moe_pp,
+      xend = change_pp + change_moe_pp,
+      yend = GEOID
+    ),
+    color = "gray50"
+  ) +
+  geom_point(aes(x = change_pp, color = detectable), size = 2) +
+  scale_color_manual(
+    values = c("TRUE" = "#1670A9", "FALSE" = "#B05243"),
+    labels = c("TRUE" = "Detectable", "FALSE" = "Not detectable")
+  ) +
+  labs(
+    title = "Largest estimated poverty-rate changes in Philadelphia tracts",
+    subtitle = "20 tracts selected by absolute estimated change; bars show 90% MOEs",
+    x = "Change in poverty rate (percentage points)",
+    y = "Census tract GEOID",
+    color = "Change at 90% confidence"
+  ) +
+  theme_minimal()
+```
+One of the largest estimated changes in the chart has a very wide margin of error that crosses zero. Its size alone does not establish that the tract’s poverty rate changed.
+
+## Reliability of tract poverty estimates
+
+This table counts tracts by the reliability of their poverty-rate estimates in each period.
+
+```{r}
+reliability_table <- bind_rows(
+  mutate(poverty_2010_rates, Period = "2006–2010"),
+  mutate(poverty_2017_rates, Period = "2013–2017")
+) |>
+  count(Period, reliability) |>
+  mutate(Symbol = case_when(
+    reliability == "Reliable" ~ "✓",
+    reliability == "Somewhat reliable" ~ "~",
+    reliability == "Unreliable" ~ "!",
+    TRUE ~ "?"
+  )) |>
+  select(Period, Symbol, Reliability = reliability, Tracts = n)
+
+knitr::kable(
+  reliability_table,
+  caption = "Reliability of Philadelphia tract poverty-rate estimates"
+)
+```
+
+*Source: ACS 5-year estimates. Jurjevich et al. (2018) CV thresholds: ✓ reliable (below 12%); ~ somewhat reliable (12–40%); ! unreliable (above 40%); ? undefined.*
+
+Most tract poverty-rate estimates were classified as somewhat reliable: 321 of 384 in 2006–2010 and 332 of 384 in 2013–2017. These counts describe each period separately; they do not establish whether an individual tract’s estimate became more reliable over time.
+
+## How many tract changes were detectable?
+
+The chart counts matched tracts by the result of the 90% change test.
+
+```{r}
+change_counts <- data.frame(
+  Result = c("Detectable increase", "Detectable decrease", "Not detectable"),
+  Tracts = c(
+    sum(tract_change$detectable & tract_change$change_pp > 0),
+    sum(tract_change$detectable & tract_change$change_pp < 0),
+    sum(!tract_change$detectable)
+  )
+)
+
+ggplot(change_counts, aes(x = Result, y = Tracts)) +
+  geom_col(fill = "steelblue") +
+  geom_text(aes(label = Tracts), vjust = -0.4) +
+  labs(
+    title = "Most Philadelphia tract poverty-rate changes were not detectable",
+    subtitle = "2006–2010 versus 2013–2017 ACS 5-year estimates; 90% confidence",
+    x = "Result of change test",
+    y = "Number of census tracts"
+  ) +
+  theme_minimal()
+```
+Among 376 tracts with usable comparisons, 36 showed a detectable increase in the poverty rate and 27 showed a detectable decrease at 90% confidence. For the other 313 tracts, the estimated change was not distinguishable from zero. This does not prove their poverty rates stayed constant; the ACS estimates are too uncertain to establish a change using this test.
+
+
+## Why were some tracts excluded?
+
+```{r}
+#| output: false
+tract_pairs |>
+  summarise(across(everything(), ~sum(is.na(.))))
+```
+```{r}
+#| output: false
+tract_pairs |>
+  filter(is.na(rate_2010) | is.na(rate_2017))
+```
+```{r}
+#| output: false
+names(poverty_2017_rates)
+```
+```{r}
+#| output: false
+poverty_2017_rates |>
+  filter(is.na(poverty_rate)) |>
+  select(GEOID, NAME, estimate_total_pop, estimate_poverty_pop)
+```
+```{r}
+#| output: false
+poverty_2010_rates |>
+  filter(is.na(poverty_rate)) |>
+  select(GEOID, NAME, estimate_total_pop, estimate_poverty_pop)
+```
+I started with 384 tracts that appeared in both ACS periods, but I could only test changes for 376. I checked the eight excluded tracts instead of assuming their missing rates meant zero poverty. Seven had no calculable rate in either period, and one had a rate in 2006–2010 but none in 2013–2017. Wherever a rate was missing, the estimated population covered by the poverty measure was zero. That makes the rate impossible to calculate, so I left those tracts out of the change test.
+
+## What does the evidence support?
+
+**Supported:** I found detectable poverty-rate changes in some Philadelphia census tracts. Of the 376 tracts I could compare, 36 had an increase and 27 had a decrease at 90% confidence.
+
+**Cannot be determined:** I cannot check the article’s exact numbers for Eastwick, Holmesburg, or Fairhill with the tract data I used. The article gives neighborhood figures but does not say which tracts were included in each neighborhood. I would be guessing if I assigned tracts to those names. My calculations also cover poverty among everyone in the poverty measure, so they cannot test the article’s discussion of white poverty.
+
+**Not supported:** My results do not support reading the article as evidence that poverty rates clearly rose across most Philadelphia tracts. Only 36 of the 376 tracts had a detectable increase; 27 had a detectable decrease, and 313 had no detectable change. That does not mean the article’s Eastwick or Holmesburg figures are wrong. My tract analysis cannot settle those neighborhood claims.
+
+## Rewrite
+
+Philadelphia’s poverty rates did not move in one clear direction across the city. Comparing the 2006–2010 and 2013–2017 surveys, I found detectable increases in 36 census tracts and detectable decreases in 27. In 313 other tracts, the data did not establish whether poverty changed. These results show why a large estimated jump should be checked against its margin of error before calling it a clear increase. The article reports increases for Eastwick and Holmesburg, but without its neighborhood boundaries, I cannot verify those specific figures from tract data.
