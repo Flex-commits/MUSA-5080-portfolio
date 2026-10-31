@@ -1,24 +1,25 @@
 ---
-title: "Assignment 5: House Price Prediction, Chicago"
-subtitle: "MUSA 5080 · Team assignment"
+title: "House Price Predictions, Chicago"
+subtitle: "Assignment 5 · Team Assignment"
 author: "Team Injera: Tatar Anurakwongsri & Thomas Hagos"
 date: 2026-10-30
 format:
   html:
     toc: true
     code-fold: true
+    code-summary: "Show code"
 execute:
   warning: false
   message: false
 ---
 
-## Overview
+## The model and the data
 
 We modeled single-family sale prices in Chicago from 2023-2025 using house characteristics and spatial features. The training file contains 23,200 sales with observed prices; the test file contains 5,789 homes with prices withheld. We kept the outcome in dollars, compared 16 models using 10-fold cross-validation, and examined residual patterns and valuation ratios by neighborhood income.
 
 Assessment errors matter because they can place unequal burdens on households. The 2017 *Chicago Tribune* investigation, "The Tax Divide," motivates our comparison of relative valuation errors across income groups.
 
-## Part 0: Setup
+## Data and methods
 
 
 ```{r}
@@ -110,7 +111,7 @@ all_sales %>% st_drop_geometry() %>% count(split)
 
 ---
 
-## Part 1: Data cleaning and exploration
+## Cleaning and exploring the sales
 
 
 ```{r}
@@ -270,7 +271,7 @@ describe(clean_train$sale_price)
 
 The IQR was used to identify outliers rather than standard deviation because sales price generally uses the median and the high skewness of the data requires a stricter condition. In total, `r nrow(train_df)-nrow(clean_train)` of `r nrow(train_df)` training sales were removed. No test rows were removed. This distribution-based rule does not establish that excluded sales were non-market. It can worsen prediction for low- and high-value homes.
 
-### Spatial spread of sales price
+### Where prices vary across Chicago
 
 ```{r}
 #| fig-width: 14
@@ -280,7 +281,7 @@ ggplot(clean_train) +
   theme_void()
 ```
 
-### Create new variables
+### Neighborhood and spatial features
 
 Crime events are restricted to 2023-2025 and to dates before each sale. Other supplied amenity and boundary files lack historical snapshot dates, so their presence within the required time window cannot be certified from these files. This is a remaining provenance limitation. The unused school data report 2022 and are excluded.
 
@@ -324,7 +325,7 @@ if (file.exists(feature_cache)) {
 }
 ```
 
-### Check created variables
+### Exploring the new features
 
 ```{r}
 plot(data = clean_train, log_price ~ FAR)
@@ -357,7 +358,7 @@ Lastly, house sales price are clustered depending on location. The Northeast end
 saveRDS(list(clean_train=clean_train,df=df,train_df=train_df,train=train,all_sales=all_sales),file.path(root,"features.rds"))
 ```
 
-## Part 2: Build the model
+## Building the model
 
 ```{r}
 #| label: part-2
@@ -565,7 +566,7 @@ model_log <- model_log %>%
 
 ---
 
-## Part 3: Final model
+## The final model
 
 
 ```{r}
@@ -620,7 +621,7 @@ Stepwise selection used all retained training rows before CV. Its CV score is co
 
 ---
 
-## Part 4: Where it fails, and who pays
+## Where the model fails, and who pays
 
 
 ```{r}
@@ -662,7 +663,7 @@ This connects to The Tax Divide: acceptable overall dollar error can hide unequa
 
 ---
 
-## Part 5: Test predictions
+## Predictions for the test homes
 
 
 ```{r}
@@ -715,7 +716,7 @@ Five test predictions reach the zero floor. They remain in the submission and sh
 
 [Download the team prediction CSV](team_injera_predictions.csv).
 
-## Part 6: Reflection
+## Reflection
 
 
 Our model keeps sale price in dollars and combines house features with location. Age class C starts at 50 years in our code, and class A is below 20. The class C coefficient compares those age groups while holding other model terms constant. 

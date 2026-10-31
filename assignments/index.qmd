@@ -13,7 +13,6 @@ listing:
   filter-ui: false
 ---
 
-Completed assignments for MUSA 5080. New assignments appear here automatically
-once you add the `.qmd` file to this folder and render.
+Completed work for MUSA 5080: Public Policy Analytics.
 
 [Assignment 2](assignment2%20.html)
