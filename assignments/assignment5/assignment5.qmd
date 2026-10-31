@@ -368,8 +368,9 @@ if (file.exists(feature_cache)) {
   df$mean_afdHousing <- vapply(nn_afd,function(i) mean(afd_housing$Units[i],na.rm=TRUE),numeric(1))
   df$afdHousing_radius <- lengths(st_intersects(buffers,afd_housing))
   df$in_ADU_area <- lengths(st_intersects(df,ADU))>0
-  # Nearest polygon returns the containing community, with deterministic boundary fallback.
-  df$community <- factor(comm_area$COMMUNITY[st_nearest_feature(df,comm_area)])
+  # Use the supplied community polygons; retain unassigned homes as Unknown.
+  df <- st_join(df,comm_area %>% select(community=COMMUNITY),largest=TRUE) %>%
+    mutate(community=factor(replace_na(community,"Unknown")))
   clean_train <- df[match(clean_train$id,df$id),]
 }
 ```
@@ -626,7 +627,7 @@ Show your final model, the model log, and baseline vs. final residual maps.
 #| label: part-3
 
 f_stepwise
-model_log
+knitr::kable(model_log, digits=3)
 ```
 
 
@@ -772,6 +773,8 @@ moran(f_stepwise, clean_train, "sale_price")$moran_p
 **Final CV RMSE:** $`r format(round(cv_rmse(f_final, clean_train)), big.mark=",")`. Instructor-held-out test RMSE is unavailable because test prices are withheld.
 
 ---
+
+Five test predictions reach the zero floor. They remain in the submission and should be reviewed before any assessment use.
 
 [Download the team prediction CSV](team_injera_predictions.csv). One teammate uploads this file; every teammate submits their own portfolio page link.
 
