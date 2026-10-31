@@ -2,7 +2,9 @@
 title: "Assignments"
 description: "Graded work for MUSA 5080."
 listing:
-  contents: "*.qmd"
+  contents:
+    - "assignment3.qmd"
+    - "assignment5/assignment5.qmd"
   sort: "date desc"
   type: default
   fields: [title, date, description]
@@ -12,3 +14,5 @@ listing:
 
 Completed assignments for MUSA 5080. New assignments appear here automatically
 once you add the `.qmd` file to this folder and render.
+
+[Assignment 2](assignment2%20.html)

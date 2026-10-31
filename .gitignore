@@ -26,3 +26,10 @@ Thumbs.db
 /.quarto/
 
 **/*.quarto_ipynb
+
+# Large source extracts and intermediate model objects for Assignment 5
+assignments/assignment5/data/raw/crimes_23-25.csv
+assignments/assignment5/data/raw/highschools_23-24.csv
+assignments/assignment5/data/clean/
+assignments/assignment5/features.rds
+assignments/assignment5/results.rds

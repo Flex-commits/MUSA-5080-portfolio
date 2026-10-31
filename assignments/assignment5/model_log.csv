@@ -1,0 +1,17 @@
+model,added,cv_rmse,moran_i,notes
+m1,All given variables,219609.6694530278,0.468152559324812,Baseline model
+m2,log(building_000sf),226096.50733416615,0.4723870715799837,log transformed building_000sf
+m3,log(lotsize_acre),226128.25919700039,0.47400867858323104,log transformed lotsize_acre
+m4,age class variable,223891.00005211422,0.4875533833170863,age class A/B/C
+m5,FAR,223689.6148355454,0.48946638023028516,added floor to area ratio
+m6,mean_afdHousing,214444.8696588732,0.47646877956168743,Mean of 5 closes affordable rental units
+m7,dist_train_mi,211935.20500224354,0.47880989347009656,distance to closest train station
+m8,dist_bus_mi,211889.2441358908,0.47882057580705595,distance to closest bus station
+m9,dist_bike_mi,211886.8424660776,0.47862548976982,distance to closest bike rack
+m10,parks_radius,211840.22519562865,0.4785781122827845,number of parks in quarter mile raidus
+m11,crime_radius,211284.95375296776,0.46575620991377814,number of crimes committed in quarter mile raidus
+m12,in_ADU_area,210173.20121041493,0.4611138174212031,is the house in a access dwelling unit development area
+m13,community,149411.11046060536,0.20037758183662596,which community is the house in
+m14,interaction between full_basement and finished_basement,149237.58133662588,0.19934755281458538,interaction effect between full_basement and finished_basement
+m15,interaction between log_sf and community,135490.66909484565,0.168786492350631,interaction effect between log_sf and community
+m16,stepwise selection,135450.70508308677,0.1688139238661418,predictors selected using backward stepwise (AIC)
