@@ -4,6 +4,7 @@ description: "Graded work for MUSA 5080."
 listing:
   contents:
     - "assignment3.qmd"
+    - "Assignment4/assignment4.qmd"
     - "assignment5/assignment5.qmd"
   sort: "date desc"
   type: default

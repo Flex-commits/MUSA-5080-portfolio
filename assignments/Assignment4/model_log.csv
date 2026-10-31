@@ -1,0 +1,11 @@
+model,added,cv_rmse,notes
+m1,ACS baseline,12.469413649012585,Four predictors; outcome stays in percentage points
+m2,+ burglary count,12.118225943703901,Raw volume
+m3,+ burglary per square mile,11.568985624717692,Density alongside count
+m4,+ shooting victims per square mile,11.301697167948692,Separate historical layer
+m5,+ nearest shooting-victim distance,10.782358571395887,Straight-line miles
+m6,+ City Hall distance,9.86366916240534,Central location proxy
+m_log,Replace burglary density with log1p,10.048240118144701,Compare with m6
+m_sq,+ squared City Hall distance,9.593182167684793,Retain the linear distance term
+m_cat,Replace City Hall distance with rings,9.999723113302739,Core is the reference level
+final,Selected m_sq,9.593182167684793,Lowest mean CV RMSE among tested specifications
